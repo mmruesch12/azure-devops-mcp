@@ -1,8 +1,16 @@
 import { GetRepositoryTool } from './getRepository';
 import { ListRepositoriesTool } from './listRepositories';
 import { SearchRepositoryCodeTool } from './searchRepositoryCode';
+import { GetPullRequestsTool } from './getPullRequests';
+import { GetPullRequestTool } from './getPullRequest';
 
-export { GetRepositoryTool, ListRepositoriesTool, SearchRepositoryCodeTool };
+export { 
+  GetRepositoryTool, 
+  ListRepositoriesTool, 
+  SearchRepositoryCodeTool, 
+  GetPullRequestsTool,
+  GetPullRequestTool
+};
 
 /**
  * Get all repository tools
@@ -14,5 +22,7 @@ export function getRepositoryTools() {
     new GetRepositoryTool(),
     new ListRepositoriesTool(),
     new SearchRepositoryCodeTool(),
+    new GetPullRequestsTool(),
+    new GetPullRequestTool(),
   ];
 }

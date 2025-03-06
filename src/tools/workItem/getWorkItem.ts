@@ -53,6 +53,7 @@ export class GetWorkItemTool implements McpTool {
 
           // Get the work item
           const workItem = await witApi.getWorkItem(args.workItemId);
+          console.log('workItem', workItem);
 
           if (!workItem) {
             return {
@@ -72,8 +73,15 @@ export class GetWorkItemTool implements McpTool {
             title: fields['System.Title'],
             state: fields['System.State'],
             type: fields['System.WorkItemType'],
+            description: fields['System.Description'],
             assignedTo: fields['System.AssignedTo']?.displayName,
             iterationPath: fields['System.IterationPath'],
+            areaPath: fields['System.AreaPath'],
+            createdBy: fields['System.CreatedBy']?.displayName,
+            createdDate: fields['System.CreatedDate'],
+            changedBy: fields['System.ChangedBy']?.displayName,
+            changedDate: fields['System.ChangedDate'],
+            priority: fields['Microsoft.VSTS.Common.Priority'],
             tags: fields['System.Tags'],
             url: `${connection.serverUrl}/${project}/_workitems/edit/${workItem.id}`,
           };
@@ -83,13 +91,34 @@ export class GetWorkItemTool implements McpTool {
               {
                 type: 'text',
                 text:
-                  `# Work Item ${formattedWorkItem.id}: ${formattedWorkItem.title}\n\n` +
-                  `**Type**: ${formattedWorkItem.type}\n` +
-                  `**State**: ${formattedWorkItem.state}\n` +
-                  `**Assigned To**: ${formattedWorkItem.assignedTo || 'Unassigned'}\n` +
-                  `**Iteration**: ${formattedWorkItem.iterationPath}\n` +
-                  `**Tags**: ${formattedWorkItem.tags || 'None'}\n` +
-                  `**URL**: ${formattedWorkItem.url}\n`,
+                  `# Work Item ${formattedWorkItem.id}: ${formattedWorkItem.title}
+
+` +
+                  `**Type**: ${formattedWorkItem.type}
+` +
+                  `**State**: ${formattedWorkItem.state}
+` +
+                  `**Assigned To**: ${formattedWorkItem.assignedTo || 'Unassigned'}
+` +
+                  `**Area Path**: ${formattedWorkItem.areaPath || 'Not specified'}
+` +
+                  `**Iteration**: ${formattedWorkItem.iterationPath}
+` +
+                  `**Priority**: ${formattedWorkItem.priority || 'Not specified'}
+` +
+                  `**Created By**: ${formattedWorkItem.createdBy || 'Unknown'} on ${formattedWorkItem.createdDate ? new Date(formattedWorkItem.createdDate).toLocaleString() : 'Unknown date'}
+` +
+                  `**Last Modified By**: ${formattedWorkItem.changedBy || 'Unknown'} on ${formattedWorkItem.changedDate ? new Date(formattedWorkItem.changedDate).toLocaleString() : 'Unknown date'}
+` +
+                  `**Tags**: ${formattedWorkItem.tags || 'None'}
+` +
+                  `**URL**: ${formattedWorkItem.url}
+
+` +
+                  (formattedWorkItem.description ? `## Description
+
+${formattedWorkItem.description}
+` : ''),
               },
             ],
           };

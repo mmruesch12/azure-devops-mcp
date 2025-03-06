@@ -18,6 +18,11 @@ export interface AzureDevOpsConfig {
   defaultProject?: string;
   
   /**
+   * Optional default repository to use when not specified
+   */
+  defaultRepository?: string;
+  
+  /**
    * Optional API version to use (defaults to latest)
    */
   apiVersion?: string;

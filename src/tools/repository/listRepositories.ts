@@ -36,6 +36,7 @@ export class ListRepositoriesTool implements McpTool {
 
           // Fetch repositories, optionally filtered by project
           const repositories = await gitApi.getRepositories(args.project);
+          console.log('repositories', repositories);
 
           if (!repositories || repositories.length === 0) {
             return {

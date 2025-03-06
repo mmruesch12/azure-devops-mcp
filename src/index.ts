@@ -16,6 +16,7 @@ const config: AzureDevOpsConfig = {
   organizationUrl: process.env.AZURE_DEVOPS_ORG_URL || '',
   personalAccessToken: process.env.AZURE_DEVOPS_PAT || '',
   defaultProject: process.env.AZURE_DEVOPS_DEFAULT_PROJECT,
+  defaultRepository: process.env.AZURE_DEVOPS_DEFAULT_REPOSITORY,
   apiVersion: process.env.AZURE_DEVOPS_API_VERSION,
 };
 
@@ -52,6 +53,10 @@ async function runServer() {
 
   if (config.defaultProject) {
     console.log(`Default Project: ${config.defaultProject}`);
+  }
+
+  if (config.defaultRepository) {
+    console.log(`Default Repository: ${config.defaultRepository}`);
   }
 
   // Create and start the SSE manager

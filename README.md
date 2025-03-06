@@ -55,6 +55,8 @@ The following environment variables need to be configured in your `.env` file:
 
 - `AZURE_DEVOPS_ORG_URL`: Your Azure DevOps organization URL
 - `AZURE_DEVOPS_PAT`: Personal Access Token for Azure DevOps
+- `AZURE_DEVOPS_DEFAULT_PROJECT`: (Optional) Default project to use when not specified in API calls
+- `AZURE_DEVOPS_DEFAULT_REPOSITORY`: (Optional) Default repository to use when not specified in API calls
 - Additional configuration variables as specified in `.env.example`
 
 ## Available Scripts

@@ -8,7 +8,7 @@
     "build": "tsc && npm run copy-html",
     "copy-html": "cp -f src/index.html dist/ 2>/dev/null || echo 'No HTML file to copy'",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "npm run build && node dist/index.js",
+    "start": "npm run build && node dist/src/index.js",
     "inspector": "npm run build && npx @modelcontextprotocol/inspector node dist/index.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\""

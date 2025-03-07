@@ -59,9 +59,11 @@ export class GetPullRequestsTool implements McpTool {
           if (!connection) {
             throw new Error('No connection to Azure DevOps');
           }
+          
 
           // Use provided project or fall back to default project
           const project = args.project || config.defaultProject;
+          console.log('project', project)
           if (!project) {
             throw new Error(
               'No project specified and no default project configured',
@@ -70,7 +72,7 @@ export class GetPullRequestsTool implements McpTool {
 
           // Use provided repository ID or fall back to default repository
           const repositoryId = args.repositoryId || config.defaultRepository || '';
-
+          console.log('repositoryId', repositoryId)
           // Get the Git API
           const gitApi = await connection.getGitApi();
 
@@ -98,11 +100,13 @@ export class GetPullRequestsTool implements McpTool {
 
           // Set up search criteria
           const searchCriteria: GitPullRequestSearchCriteria = {
-            repositoryId: args.repositoryId,
+            repositoryId: args.repositoryId ? args.repositoryId : repositoryId,
             status: statusFilter,
             creatorId: args.creatorId,
             reviewerId: args.reviewerId,
           };
+
+          console.log('searchCriteria', searchCriteria)
 
           // Get pull requests
           const pullRequests = await gitApi.getPullRequests(
@@ -113,6 +117,8 @@ export class GetPullRequestsTool implements McpTool {
             undefined,
             args.limit || 10,
           );
+
+          console.log('pullRequests', pullRequests)
 
           if (!pullRequests || pullRequests.length === 0) {
             return {

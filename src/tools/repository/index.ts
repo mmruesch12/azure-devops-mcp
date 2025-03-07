@@ -4,6 +4,7 @@ import { SearchRepositoryCodeTool } from './searchRepositoryCode';
 import { GetPullRequestsTool } from './getPullRequests';
 import { GetPullRequestTool } from './getPullRequest';
 import { CreatePullRequestTool } from './createPullRequest';
+import { GetPullRequestDiffTool } from './getPullRequestDiff';
 
 export { 
   GetRepositoryTool, 
@@ -11,7 +12,8 @@ export {
   SearchRepositoryCodeTool, 
   GetPullRequestsTool,
   GetPullRequestTool,
-  CreatePullRequestTool
+  CreatePullRequestTool,
+  GetPullRequestDiffTool
 };
 
 /**
@@ -27,5 +29,6 @@ export function getRepositoryTools() {
     new GetPullRequestsTool(),
     new GetPullRequestTool(),
     new CreatePullRequestTool(),
+    new GetPullRequestDiffTool(),
   ];
 }

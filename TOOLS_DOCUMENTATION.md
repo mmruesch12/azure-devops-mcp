@@ -117,6 +117,43 @@ Searches for the pull request in the default repository specified in `AZURE_DEVO
 
 ---
 
+### get_pull_request_diff
+
+Retrieve the diff (changes) for a specific pull request.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pullRequestId` | number | Yes | Pull request ID |
+| `project` | string | No | Project containing the pull request (uses default project if not specified) |
+| `top` | number | No | Maximum number of changes to return (default: 100) |
+| `skip` | number | No | Number of changes to skip (default: 0) |
+
+**Response:**
+
+Returns a markdown formatted diff of the pull request, including:
+- Summary of changes (added, modified, deleted, renamed files)
+- List of all changed files with their change types
+- Links to view each file in the browser
+- Link to view the full diff in the browser
+
+**Example Request:**
+```json
+{
+  "request": "use_tool",
+  "tool": "get_pull_request_diff",
+  "args": {
+    "pullRequestId": 123
+  }
+}
+```
+
+**Default Behavior:**
+Uses the repository specified in `AZURE_DEVOPS_DEFAULT_REPOSITORY` from the environment configuration.
+
+---
+
 ### get_pull_requests
 
 List pull requests with optional filtering.

@@ -34,10 +34,6 @@ export class GetPullRequestTool implements McpTool {
           .describe(
             'The project containing the pull request (uses default project if not specified)',
           ),
-        repositoryId: z
-          .string()
-          .optional()
-          .describe('The ID of the repository containing the pull request'),
       },
       async (args, _extras) => {
         try {
@@ -53,17 +49,24 @@ export class GetPullRequestTool implements McpTool {
             );
           }
 
+          // Use the repository from the environment configuration
+          const repositoryId = config.defaultRepository;
+          if (!repositoryId) {
+            throw new Error(
+              'No default repository configured. Please set AZURE_DEVOPS_DEFAULT_REPOSITORY in your .env file',
+            );
+          }
+
           // Get the Git API
           const gitApi = await connection.getGitApi();
 
           // Get the pull request
           let pullRequest: GitPullRequest;
           
-          if (args.repositoryId || config.defaultRepository) {
-            // If repository ID is provided or we have a default repository, use it
-            const repoId = args.repositoryId || config.defaultRepository || '';
+          try {
+            // Use the default repository from environment configuration
             pullRequest = await gitApi.getPullRequest(
-              repoId,
+              repositoryId,
               args.pullRequestId,
               project,
               undefined,
@@ -71,8 +74,10 @@ export class GetPullRequestTool implements McpTool {
               1, // includeCommits
               true, // includeWorkItemRefs
             );
-          } else {
-            // Try to find the pull request without repository ID
+          } catch (error) {
+            // Try to find the pull request in other repositories if not found in the default one
+            console.warn(`Pull request #${args.pullRequestId} not found in repository '${repositoryId}'. Searching in other repositories...`);
+            
             // First, get repositories in the project
             const repositories = await gitApi.getRepositories(project);
             
@@ -80,6 +85,11 @@ export class GetPullRequestTool implements McpTool {
             let foundPR: GitPullRequest | undefined;
             
             for (const repo of repositories) {
+              if (repo.id === repositoryId) {
+                // Skip the default repository, we already tried it
+                continue;
+              }
+              
               try {
                 const pr = await gitApi.getPullRequest(
                   repo.id!,
@@ -92,6 +102,7 @@ export class GetPullRequestTool implements McpTool {
                 );
                 
                 if (pr && pr.pullRequestId === args.pullRequestId) {
+                  console.warn(`Found pull request #${args.pullRequestId} in repository '${repo.name}' instead of default repository '${repositoryId}'`);
                   foundPR = pr;
                   break;
                 }
@@ -199,76 +210,83 @@ export class GetPullRequestTool implements McpTool {
           // Reviewers
           if (reviewers.length > 0) {
             markdown += `## Reviewers\n\n`;
-            
-            reviewers.forEach(reviewer => {
-              const voteLabel = reviewer.vote === 10 ? '✅ Approved' : 
-                               reviewer.vote === 5 ? '👍 Approved with suggestions' :
-                               reviewer.vote === 0 ? '⏱️ No vote' :
-                               reviewer.vote === -5 ? '🔍 Waiting for author' :
-                               reviewer.vote === -10 ? '❌ Rejected' : 'Unknown';
+            reviewers.forEach((reviewer) => {
+              const vote = reviewer.vote;
+              let voteText = '⬜ Not voted';
+              if (vote === 10) voteText = '✅ Approved';
+              if (vote === 5) voteText = '✅ Approved with suggestions';
+              if (vote === -5) voteText = '⚠️ Waiting for author';
+              if (vote === -10) voteText = '❌ Rejected';
               
-              markdown += `- **${reviewer.displayName}**: ${voteLabel}\n`;
+              markdown += `- ${reviewer.displayName} (${voteText})\n`;
             });
-            
             markdown += `\n`;
           }
           
           // Commits
           if (commits.length > 0) {
-            markdown += `## Commits (${commits.length})\n\n`;
-            
-            commits.forEach(commit => {
-              const authorDate = commit.author?.date ? new Date(commit.author.date).toLocaleString() : 'Unknown date';
-              markdown += `- **${commit.commitId?.substring(0, 8)}**: ${commit.comment} by ${commit.author?.name || 'Unknown'} on ${authorDate}\n`;
+            markdown += `## Commits\n\n`;
+            commits.forEach((commit) => {
+              const author = commit.author?.name || 'Unknown';
+              const message = commit.comment || 'No message';
+              const date = commit.author?.date ? new Date(commit.author.date).toLocaleString() : 'Unknown date';
+              const id = commit.commitId?.slice(0, 8) || 'Unknown';
+              
+              markdown += `- ${message} (${author}, ${date}, ${id})\n`;
             });
-            
             markdown += `\n`;
           }
           
           // Work Items
           if (workItems.length > 0) {
-            markdown += `## Work Items (${workItems.length})\n\n`;
-            
-            workItems.forEach(workItem => {
+            markdown += `## Work Items\n\n`;
+            workItems.forEach((workItem) => {
               const id = workItem.id;
               const url = workItem.url;
               markdown += `- [Work Item #${id}](${url})\n`;
             });
-            
             markdown += `\n`;
           }
           
-          // Comments
-          if (threads && threads.length > 0) {
-            const commentThreads = threads.filter((thread: GitPullRequestCommentThread) => 
-              thread.comments && thread.comments.length > 0
-            );
+          // Threads (Comments)
+          if (threads.length > 0) {
+            markdown += `## Comments\n\n`;
             
-            if (commentThreads.length > 0) {
-              markdown += `## Comments (${commentThreads.length} threads)\n\n`;
+            threads.forEach((thread) => {
+              if (!thread.comments || thread.comments.length === 0) return;
               
-              commentThreads.forEach((thread: GitPullRequestCommentThread) => {
-                if (thread.comments && thread.comments.length > 0) {
-                  const fileName = thread.threadContext?.filePath || 'General comment';
-                  const status = thread.status === 1 ? 'Active' : 
-                                thread.status === 2 ? 'Fixed' :
-                                thread.status === 3 ? 'Won\'t Fix' :
-                                thread.status === 4 ? 'Closed' :
-                                thread.status === 5 ? 'By Design' :
-                                thread.status === 6 ? 'Pending' : 'Unknown';
-                  
-                  markdown += `### Comment Thread (${status}) on ${fileName}\n\n`;
-                  
-                  thread.comments.forEach((comment: any) => {
-                    const author = comment.author?.displayName || 'Unknown';
-                    const date = comment.publishedDate ? new Date(comment.publishedDate).toLocaleString() : 'Unknown date';
-                    const content = comment.content || 'No content';
-                    
-                    markdown += `**${author}** on ${date}:\n${content}\n\n`;
-                  });
-                }
+              // Skip system messages
+              if (thread.comments[0].commentType === 1) return;
+              
+              const fileName = thread.threadContext?.filePath || 'General';
+              const lineNumber = thread.threadContext?.rightFileStart?.line || '';
+              const filePosition = lineNumber ? ` (Line ${lineNumber})` : '';
+              
+              markdown += `### ${fileName}${filePosition}\n\n`;
+              
+              thread.comments?.forEach((comment) => {
+                const author = comment.author?.displayName || 'Unknown';
+                const date = comment.publishedDate ? new Date(comment.publishedDate).toLocaleString() : 'Unknown date';
+                const content = comment.content || 'No content';
+                
+                markdown += `**${author}** (${date}):\n${content}\n\n`;
               });
-            }
+              
+              // Thread status
+              if (thread.status) {
+                let statusText = '';
+                if (thread.status === 1) statusText = 'Active';
+                if (thread.status === 2) statusText = 'Fixed';
+                if (thread.status === 3) statusText = 'Won\'t Fix';
+                if (thread.status === 4) statusText = 'Closed';
+                if (thread.status === 5) statusText = 'By Design';
+                if (thread.status === 6) statusText = 'Pending';
+                
+                markdown += `*Status: ${statusText}*\n\n`;
+              }
+              
+              markdown += `---\n\n`;
+            });
           }
 
           return {
@@ -279,13 +297,13 @@ export class GetPullRequestTool implements McpTool {
               },
             ],
           };
-        } catch (error: any) {
+        } catch (error) {
           console.error('Error getting pull request:', error);
           return {
             content: [
               {
                 type: 'text',
-                text: `Error getting pull request: ${error.message}`,
+                text: `Error getting pull request: ${error instanceof Error ? error.message : String(error)}`,
               },
             ],
           };

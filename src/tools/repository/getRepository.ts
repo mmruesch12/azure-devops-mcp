@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as azdev from 'azure-devops-node-api';
 import { z } from 'zod';
 import { McpTool } from '../types';
+import { AzureDevOpsConfig } from '../../types/config';
 
 /**
  * Tool for getting repository details from Azure DevOps
@@ -15,21 +16,45 @@ export class GetRepositoryTool implements McpTool {
    *
    * @param server The MCP server
    * @param connection The Azure DevOps connection
+   * @param config The Azure DevOps configuration
    */
-  public register(server: McpServer, connection: azdev.WebApi | null): void {
+  public register(
+    server: McpServer, 
+    connection: azdev.WebApi | null,
+    config: AzureDevOpsConfig,
+  ): void {
     server.tool(
       this.name,
       {
-        repositoryId: z.string().describe('The ID or name of the repository'),
+        repositoryId: z
+          .string()
+          .optional()
+          .describe('The ID or name of the repository (uses default repository if not specified)'),
         project: z
           .string()
           .optional()
-          .describe('The project containing the repository'),
+          .describe('The project containing the repository (uses default project if not specified)'),
       },
       async (args, _extras) => {
         try {
           if (!connection) {
             throw new Error('No connection to Azure DevOps');
+          }
+
+          // Use provided project or fall back to default project
+          const project = args.project || config.defaultProject;
+          if (!project) {
+            throw new Error(
+              'No project specified and no default project configured',
+            );
+          }
+
+          // Use provided repository ID or fall back to default repository
+          const repositoryId = args.repositoryId || config.defaultRepository;
+          if (!repositoryId) {
+            throw new Error(
+              'No repository specified and no default repository configured',
+            );
           }
 
           // Get the Git API
@@ -41,20 +66,20 @@ export class GetRepositoryTool implements McpTool {
           try {
             // First try to get by ID (if it's a valid GUID)
             repository = await gitApi.getRepository(
-              args.repositoryId,
-              args.project,
+              repositoryId,
+              project,
             );
           } catch (error) {
             // If that fails, try to find by name
-            const repositories = await gitApi.getRepositories(args.project);
+            const repositories = await gitApi.getRepositories(project);
             repository = repositories.find(
               (repo) =>
-                repo.name?.toLowerCase() === args.repositoryId.toLowerCase(),
+                repo.name?.toLowerCase() === repositoryId.toLowerCase(),
             );
 
             if (!repository) {
               throw new Error(
-                `Repository '${args.repositoryId}' not found${args.project ? ` in project '${args.project}'` : ''}`,
+                `Repository '${repositoryId}' not found${project ? ` in project '${project}'` : ''}`,
               );
             }
           }

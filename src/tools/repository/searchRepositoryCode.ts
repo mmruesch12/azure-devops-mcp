@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as azdev from 'azure-devops-node-api';
 import { z } from 'zod';
 import { McpTool } from '../types';
+import { AzureDevOpsConfig } from '../../types/config';
 
 interface CodeSearchMatch {
   charOffset?: number;
@@ -67,8 +68,13 @@ export class SearchRepositoryCodeTool implements McpTool {
    *
    * @param server The MCP server
    * @param connection The Azure DevOps connection
+   * @param config The Azure DevOps configuration
    */
-  public register(server: McpServer, connection: azdev.WebApi | null): void {
+  public register(
+    server: McpServer, 
+    connection: azdev.WebApi | null,
+    config: AzureDevOpsConfig,
+  ): void {
     server.tool(
       this.name,
       {
@@ -76,11 +82,11 @@ export class SearchRepositoryCodeTool implements McpTool {
         project: z
           .string()
           .optional()
-          .describe('The project containing the repositories to search'),
+          .describe('The project containing the repositories to search (uses default project if not specified)'),
         repository: z
           .string()
           .optional()
-          .describe('The specific repository to search in'),
+          .describe('The specific repository to search in (uses default repository if not specified)'),
         path: z
           .string()
           .optional()
@@ -118,14 +124,20 @@ export class SearchRepositoryCodeTool implements McpTool {
             throw new Error('Unable to determine organization name from URL');
           }
 
+          // Use provided project or fall back to default project
+          const project = args.project || config.defaultProject;
+          
+          // Use provided repository or fall back to default repository
+          const repository = args.repository || config.defaultRepository;
+
           // Prepare the search request
           const searchRequest = {
             searchText: args.searchText,
             $skip: 0,
             $top: args.maxResults || 20,
             filters: {
-              Project: args.project ? [args.project] : undefined,
-              Repository: args.repository ? [args.repository] : undefined,
+              Project: project ? [project] : undefined,
+              Repository: repository ? [repository] : undefined,
               Path: args.path ? [args.path] : undefined,
               Branch: args.branch ? [args.branch] : undefined,
               Extension: args.fileExtension
@@ -148,7 +160,7 @@ export class SearchRepositoryCodeTool implements McpTool {
           }
 
           // Make the REST API call
-          const projectScope = args.project || '';
+          const projectScope = project || '';
           const searchUrl = `https://almsearch.dev.azure.com/${organization}/${projectScope}/_apis/search/codesearchresults?api-version=5.1-preview.1`;
 
           const response = await fetch(searchUrl, {
@@ -199,44 +211,51 @@ export class SearchRepositoryCodeTool implements McpTool {
                   }${result.path}`
                 : null,
               snippets: (result.matches?.content || []).map((match) => ({
-                line: match.line,
-                content: match.text,
+                line: match.lineNumber?.toString(),
+                content: match.line,
                 lineNumber: match.lineNumber,
               })),
             }));
 
-          // Build the response text
-          let responseText = `# Code Search Results\n\n`;
-          responseText += `Found ${searchResults.count} results for "${args.searchText}"`;
-          if (args.project) responseText += ` in project "${args.project}"`;
-          if (args.repository)
-            responseText += ` in repository "${args.repository}"`;
-          responseText += '\n\n';
+          // Convert to markdown
+          let markdown = `# Code Search Results\n\n`;
+          markdown += `Found ${searchResults.count} result(s) for query: **${args.searchText}**\n\n`;
 
-          // Add each result with its details
-          formattedResults.forEach((result, index) => {
-            responseText += `## Result ${index + 1}\n`;
-            responseText += `**File**: ${result.fileName}\n`;
-            responseText += `**Path**: ${result.path}\n`;
-            responseText += `**Repository**: ${result.repository}\n`;
-            responseText += `**Project**: ${result.project}\n`;
-            responseText += `**Branch**: ${result.branch}\n`;
-            responseText += `**URL**: ${result.webUrl}\n\n`;
+          if (repository) {
+            markdown += `Repository: **${repository}**\n\n`;
+          }
 
-            if (result.snippets && result.snippets.length > 0) {
-              responseText += '### Matches\n';
-              result.snippets.forEach((snippet) => {
-                responseText += `\`\`\`\nLine ${snippet.lineNumber}: ${snippet.content}\n\`\`\`\n`;
-              });
+          if (project) {
+            markdown += `Project: **${project}**\n\n`;
+          }
+
+          formattedResults.forEach((result) => {
+            markdown += `## ${result.fileName}\n`;
+            markdown += `**Path**: ${result.path}\n`;
+            markdown += `**Repository**: ${result.repository || 'Unknown'}\n`;
+            markdown += `**Project**: ${result.project || 'Unknown'}\n`;
+            markdown += `**Branch**: ${result.branch}\n`;
+
+            if (result.webUrl) {
+              markdown += `**Link**: [View in Azure DevOps](${result.webUrl})\n\n`;
+            } else {
+              markdown += `\n`;
             }
-            responseText += '\n';
+
+            markdown += `### Matches (${result.matches})\n\n`;
+
+            result.snippets.forEach((snippet) => {
+              markdown += `Line ${snippet.lineNumber}: \`${snippet.content?.trim() || ''}\`\n\n`;
+            });
+
+            markdown += `---\n\n`;
           });
 
           return {
             content: [
               {
                 type: 'text',
-                text: responseText,
+                text: markdown,
               },
             ],
           };

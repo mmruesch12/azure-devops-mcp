@@ -7,6 +7,7 @@ This document provides comprehensive documentation for all tools available in th
 - [Repository Tools](#repository-tools)
 - [Project Tools](#project-tools)
 - [Work Item Tools](#work-item-tools)
+- [Pipeline Tools](#pipeline-tools)
 
 ## Repository Tools
 
@@ -479,6 +480,101 @@ Returns detailed information about the created work item in markdown format, inc
 
 **Default Behavior:**
 Creates the work item in the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
+
+## Pipeline Tools
+
+Tools for interacting with Azure DevOps pipelines.
+
+### get_pipeline
+
+Retrieve details about a specific pipeline.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pipelineId` | number | Yes | The ID of the pipeline |
+| `project` | string | No | The project containing the pipeline (uses default project if not specified) |
+
+**Response:**
+
+Returns detailed information about the pipeline in markdown format, including:
+- Pipeline ID
+- Name
+- Type
+- Quality
+- Queue Status
+- Path
+- Revision
+- Created and modified information
+- Variables (if available)
+- URL to view in browser
+
+**Example Request:**
+```json
+{
+  "request": "use_tool",
+  "tool": "get_pipeline",
+  "args": {
+    "pipelineId": 123
+  }
+}
+```
+
+**Default Behavior:**
+Uses the project specified in `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
+
+---
+
+### run_pipeline
+
+Run a pipeline with optional parameters and variables.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pipelineId` | number | Yes | The ID of the pipeline to run |
+| `project` | string | No | The project containing the pipeline (uses default project if not specified) |
+| `branch` | string | No | The branch to run the pipeline on (defaults to the default branch) |
+| `parameters` | object | No | Key-value pairs of pipeline parameters |
+| `variables` | object | No | Key-value pairs of pipeline variables |
+
+**Response:**
+
+Returns information about the queued pipeline run in markdown format, including:
+- Pipeline name and ID
+- Build number and ID
+- Status and result
+- Requested by
+- Queue time
+- Source branch and version
+- Reason
+- Parameters and variables used (if provided)
+- URL to view the run in browser
+
+**Example Request:**
+```json
+{
+  "request": "use_tool",
+  "tool": "run_pipeline",
+  "args": {
+    "pipelineId": 123,
+    "branch": "refs/heads/main",
+    "parameters": {
+      "param1": "value1",
+      "param2": "value2"
+    },
+    "variables": {
+      "var1": "value1",
+      "var2": "value2"
+    }
+  }
+}
+```
+
+**Default Behavior:**
+Uses the project specified in `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
 
 ## Error Handling
 

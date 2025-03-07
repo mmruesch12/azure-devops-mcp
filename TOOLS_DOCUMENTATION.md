@@ -363,7 +363,9 @@ Retrieve details about a specific work item.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | number | Yes | Work item ID |
+| `workItemId` | number | Yes | Work item ID |
+| `project` | string | No | The project containing the work item (uses default project if not specified) |
+| `includeRelations` | boolean | No | Whether to include parent and child linked items (default: false) |
 
 **Response:**
 
@@ -376,7 +378,8 @@ Returns detailed information about the work item in markdown format, including:
 - Creation and update dates
 - Description
 - Priority
-- Related links
+- Parent work items (when `includeRelations` is true)
+- Child work items (when `includeRelations` is true)
 
 **Example Request:**
 ```json
@@ -384,7 +387,8 @@ Returns detailed information about the work item in markdown format, including:
   "request": "use_tool",
   "tool": "get_work_item",
   "args": {
-    "id": 123
+    "workItemId": 123,
+    "includeRelations": true
   }
 }
 ```

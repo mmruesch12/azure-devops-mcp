@@ -40,7 +40,7 @@ export class RunPipelineTool implements McpTool {
         parameters: z
           .record(z.string())
           .optional()
-          .describe('Key-value pairs of pipeline parameters'),
+          .describe('Key-value pairs of pipeline parameters defined in the YAML file'),
         variables: z
           .record(z.string())
           .optional()
@@ -75,6 +75,82 @@ export class RunPipelineTool implements McpTool {
                 },
               ],
             };
+          }
+
+          // Check if this is a YAML pipeline and get parameter details if possible
+          let yamlParameters = [];
+          if (pipeline.configuration) {
+            const configType = String(pipeline.configuration.type).toLowerCase();
+            if (configType === 'yaml') {
+              try {
+                // Get the Git API to access the repository
+                const gitApi = await connection.getGitApi();
+                
+                // Get the pipeline details to find the YAML file path
+                const pipelineDetails = await pipelinesApi.getPipeline(project, args.pipelineId);
+                
+                // Safely access configuration properties using type assertion
+                const config = pipelineDetails?.configuration as any;
+                if (pipelineDetails && config && config.path) {
+                  const yamlFilePath = config.path;
+                  const repoId = config.repository?.id;
+                  
+                  if (yamlFilePath && repoId) {
+                    // Get the YAML content from the repository
+                    const fileContent = await gitApi.getItemContent(repoId, yamlFilePath);
+                    
+                    if (fileContent) {
+                      // Convert buffer to string - handle the ReadableStream type
+                      const buffer = await streamToBuffer(fileContent as any);
+                      const yamlContent = buffer.toString('utf8');
+                      
+                      // Extract parameters section from YAML
+                      const parametersMatch = yamlContent.match(/parameters:\s*([\s\S]*?)(?=\n\w|$)/m);
+                      
+                      if (parametersMatch && parametersMatch[1]) {
+                        const parametersSection = parametersMatch[1];
+                        
+                        // Parse parameters section to extract parameter details
+                        const parameterMatches = parametersSection.matchAll(/\s*-\s*name:\s*([^\n]+)[\s\S]*?(?:type:\s*([^\n]+))?[\s\S]*?(?:default:\s*([^\n]+))?[\s\S]*?(?:displayName:\s*([^\n]+))?/g);
+                        
+                        for (const match of parameterMatches) {
+                          yamlParameters.push({
+                            name: match[1]?.trim(),
+                            type: match[2]?.trim() || 'string',
+                            default: match[3]?.trim() || '',
+                            displayName: match[4]?.trim() || match[1]?.trim()
+                          });
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch (error) {
+                console.log('Error getting YAML parameters:', error);
+                // Continue without parameter information
+              }
+            }
+          }
+
+          // Validate that all required parameters are provided
+          if (yamlParameters.length > 0) {
+            const missingParams = yamlParameters.filter(param => {
+              // A parameter is considered required if it has no default value
+              const isRequired = !param.default && param.default !== '';
+              const isProvided = args.parameters && args.parameters[param.name] !== undefined;
+              return isRequired && !isProvided;
+            });
+            
+            if (missingParams.length > 0) {
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: `Error: Missing required parameters: ${missingParams.map(p => p.name).join(', ')}\n\nPlease provide values for these parameters when running the pipeline.`,
+                  },
+                ],
+              };
+            }
           }
 
           // Prepare the run parameters
@@ -121,39 +197,25 @@ export class RunPipelineTool implements McpTool {
           };
 
           // Build the response
-          let responseText = `# Pipeline Run Started
-
-**Pipeline**: ${pipeline.name} (ID: ${args.pipelineId})
-**Run Name**: ${formattedRun.name}
-**Run ID**: ${formattedRun.id}
-**State**: ${formattedRun.state || 'Not started'}
-**Result**: ${formattedRun.result || 'Not available yet'}
-**Created**: ${formattedRun.createdDate ? new Date(formattedRun.createdDate).toLocaleString() : 'Unknown'}
-**Branch**: ${formattedRun.branch}
-**URL**: ${formattedRun.url}
-`;
+          let responseText = `# Pipeline Run Started\n\n**Pipeline**: ${pipeline.name} (ID: ${args.pipelineId})\n**Run Name**: ${formattedRun.name}\n**Run ID**: ${formattedRun.id}\n**State**: ${formattedRun.state || 'Not started'}\n**Result**: ${formattedRun.result || 'Not available yet'}\n**Created**: ${formattedRun.createdDate ? new Date(formattedRun.createdDate).toLocaleString() : 'Unknown'}\n**Branch**: ${formattedRun.branch}\n**URL**: ${formattedRun.url}\n`;
 
           // Add parameters information if provided
           if (args.parameters && Object.keys(args.parameters).length > 0) {
-            responseText += `
-## Parameters
-
-`;
+            responseText += `\n## Parameters\n\n`;
             Object.entries(args.parameters).forEach(([key, value]) => {
-              responseText += `- **${key}**: ${value}
-`;
+              // Find the parameter definition if available
+              const paramDef = yamlParameters.find(p => p.name === key);
+              const displayName = paramDef ? paramDef.displayName : key;
+              
+              responseText += `- **${key}**: ${value}${displayName !== key ? ` (${displayName})` : ''}\n`;
             });
           }
 
           // Add variables information if provided
           if (args.variables && Object.keys(args.variables).length > 0) {
-            responseText += `
-## Variables
-
-`;
+            responseText += `\n## Variables\n\n`;
             Object.entries(args.variables).forEach(([key, value]) => {
-              responseText += `- **${key}**: ${value}
-`;
+              responseText += `- **${key}**: ${value}\n`;
             });
           }
 
@@ -179,4 +241,37 @@ export class RunPipelineTool implements McpTool {
       },
     );
   }
+}
+
+/**
+ * Helper function to convert a ReadableStream to a Buffer
+ */
+async function streamToBuffer(stream: any): Promise<Buffer> {
+  // If it's already a Buffer, return it directly
+  if (Buffer.isBuffer(stream)) {
+    return stream;
+  }
+  
+  // If it's a string, convert to Buffer
+  if (typeof stream === 'string') {
+    return Buffer.from(stream);
+  }
+  
+  // If it's a ReadableStream, read it into a Buffer
+  if (stream && typeof stream.on === 'function') {
+    return new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+      stream.on('error', reject);
+    });
+  }
+  
+  // If it's an ArrayBuffer or ArrayBufferView, convert to Buffer
+  if (stream instanceof ArrayBuffer || ArrayBuffer.isView(stream)) {
+    return Buffer.from(new Uint8Array(stream instanceof ArrayBuffer ? stream : stream.buffer));
+  }
+  
+  // Default fallback
+  return Buffer.from(String(stream));
 }

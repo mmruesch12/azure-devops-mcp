@@ -483,7 +483,7 @@ Creates the work item in the project specified in `AZURE_DEVOPS_PROJECT` or `AZU
 
 ## Pipeline Tools
 
-Tools for interacting with Azure DevOps pipelines.
+Tools for interacting with Azure DevOps Pipelines.
 
 ### get_pipeline
 
@@ -495,20 +495,19 @@ Retrieve details about a specific pipeline.
 |-----------|------|----------|-------------|
 | `pipelineId` | number | Yes | The ID of the pipeline |
 | `project` | string | No | The project containing the pipeline (uses default project if not specified) |
+| `includeYaml` | boolean | No | Whether to include the YAML content of the pipeline (default: false) |
 
 **Response:**
 
 Returns detailed information about the pipeline in markdown format, including:
-- Pipeline ID
-- Name
-- Type
-- Quality
-- Queue Status
-- Path
+- Pipeline ID and name
+- Folder location
+- Configuration type
 - Revision
-- Created and modified information
-- Variables (if available)
-- URL to view in browser
+- URL
+- Recent runs (if available)
+- Pipeline parameters (if `includeYaml` is true)
+- YAML content (if `includeYaml` is true and not too long)
 
 **Example Request:**
 ```json
@@ -516,19 +515,20 @@ Returns detailed information about the pipeline in markdown format, including:
   "request": "use_tool",
   "tool": "get_pipeline",
   "args": {
-    "pipelineId": 123
+    "pipelineId": 123,
+    "includeYaml": true
   }
 }
 ```
 
 **Default Behavior:**
-Uses the project specified in `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
+Uses the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
 
 ---
 
 ### run_pipeline
 
-Run a pipeline with optional parameters and variables.
+Run a pipeline with optional parameters.
 
 **Parameters:**
 
@@ -537,21 +537,20 @@ Run a pipeline with optional parameters and variables.
 | `pipelineId` | number | Yes | The ID of the pipeline to run |
 | `project` | string | No | The project containing the pipeline (uses default project if not specified) |
 | `branch` | string | No | The branch to run the pipeline on (defaults to the default branch) |
-| `parameters` | object | No | Key-value pairs of pipeline parameters |
+| `parameters` | object | No | Key-value pairs of pipeline parameters defined in the YAML file |
 | `variables` | object | No | Key-value pairs of pipeline variables |
 
 **Response:**
 
-Returns information about the queued pipeline run in markdown format, including:
+Returns information about the pipeline run in markdown format, including:
 - Pipeline name and ID
-- Build number and ID
-- Status and result
-- Requested by
-- Queue time
-- Source branch and version
-- Reason
-- Parameters and variables used (if provided)
-- URL to view the run in browser
+- Run name and ID
+- State and result
+- Creation date
+- Branch
+- URL
+- Parameters used (if any)
+- Variables used (if any)
 
 **Example Request:**
 ```json
@@ -560,21 +559,17 @@ Returns information about the queued pipeline run in markdown format, including:
   "tool": "run_pipeline",
   "args": {
     "pipelineId": 123,
-    "branch": "refs/heads/main",
+    "branch": "feature/my-branch",
     "parameters": {
-      "param1": "value1",
-      "param2": "value2"
-    },
-    "variables": {
-      "var1": "value1",
-      "var2": "value2"
+      "selectedApps": "app1 app2",
+      "pullRequestId": "456"
     }
   }
 }
 ```
 
 **Default Behavior:**
-Uses the project specified in `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
+Uses the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
 
 ## Error Handling
 

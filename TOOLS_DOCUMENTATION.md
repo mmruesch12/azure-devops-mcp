@@ -356,6 +356,58 @@ The default project (from `.env`) is highlighted in the output.
 
 Tools for interacting with Azure DevOps work items.
 
+### create_work_item
+
+Create a new work item.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `project` | string | No | Project ID or name (uses default from `.env` if not specified) |
+| `workItemType` | string | Yes | Work item type (e.g., 'Bug', 'Task', 'User Story', 'Feature') |
+| `title` | string | Yes | Title of the work item |
+| `description` | string | No | Description of the work item |
+| `assignedTo` | string | No | Email or ID of the person to assign the work item to |
+| `parentId` | number | No | The ID of the parent work item to link this work item to |
+| `linkType` | string | No | The type of link to create when linking to parent (default: Child) |
+| `relatedWorkItemId` | number | No | The ID of a related work item to link this work item to (e.g., a Feature for a User Story) |
+| `relatedWorkItemLinkType` | string | No | The type of link to create when linking to related work item (e.g., Related, Dependency, Feature) (default: Related) |
+
+**Response:**
+
+Returns detailed information about the created work item in markdown format, including:
+- ID and title
+- Type
+- State
+- Assigned to
+- Created by
+- Creation date
+- Description
+- Web URL for viewing the work item
+- Parent work item (if linked)
+- Related work items (if linked)
+
+**Example Request:**
+```json
+{
+  "request": "use_tool",
+  "tool": "create_work_item",
+  "args": {
+    "workItemType": "Task",
+    "title": "Implement search functionality",
+    "description": "Add search feature to the application",
+    "parentId": 123,
+    "linkType": "Child",
+    "relatedWorkItemId": 456,
+    "relatedWorkItemLinkType": "Related"
+  }
+}
+```
+
+**Default Behavior:**
+Creates the work item in the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
+
 ### get_work_item
 
 Retrieve details about a specific work item.
@@ -394,8 +446,6 @@ Returns detailed information about the work item in markdown format, including:
 }
 ```
 
----
-
 ### query_work_items
 
 Query work items using WIQL (Work Item Query Language).
@@ -430,56 +480,6 @@ Returns a markdown table of work items matching the query with the following inf
 
 **Default Behavior:**
 Uses the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
-
----
-
-### create_work_item
-
-Create a new work item.
-
-**Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `project` | string | No | Project ID or name (uses default from `.env` if not specified) |
-| `type` | string | Yes | Work item type (e.g., 'Bug', 'Task', 'User Story', 'Feature') |
-| `title` | string | Yes | Title of the work item |
-| `description` | string | No | Description of the work item |
-| `assignedTo` | string | No | Email or ID of the person to assign the work item to |
-| `priority` | number | No | Priority of the work item |
-| `tags` | string | No | Comma-separated list of tags |
-| `additionalFields` | object | No | Additional fields to set on the work item |
-
-**Response:**
-
-Returns detailed information about the created work item in markdown format, including:
-- ID and title
-- Type
-- State
-- Assigned to
-- Created by
-- Creation date
-- Description
-- Priority
-- Web URL for viewing the work item
-
-**Example Request:**
-```json
-{
-  "request": "use_tool",
-  "tool": "create_work_item",
-  "args": {
-    "type": "Bug",
-    "title": "Fix search functionality",
-    "description": "The search feature is not returning correct results",
-    "priority": 2,
-    "tags": "bug,search,critical"
-  }
-}
-```
-
-**Default Behavior:**
-Creates the work item in the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
 
 ## Pipeline Tools
 

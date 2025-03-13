@@ -1,6 +1,6 @@
-import { GetWorkItemTool } from './getWorkItem.js';
-import { CreateWorkItemTool } from './createWorkItem.js';
-import { QueryWorkItemsTool } from './queryWorkItems.js';
+import { GetWorkItemTool } from './getWorkItem';
+import { CreateWorkItemTool } from './createWorkItem';
+import { QueryWorkItemsTool } from './queryWorkItems';
 
 export { GetWorkItemTool, CreateWorkItemTool };
 

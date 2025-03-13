@@ -16,7 +16,7 @@ export class ListProjectsTool implements McpTool {
    * @param connection The Azure DevOps connection
    */
   public register(server: McpServer, connection: azdev.WebApi | null): void {
-    server.tool(this.name, {}, async (_args, _extras) => {
+    server.tool(this.name, {}, async (_args: unknown, _extras: unknown) => {
       try {
         if (!connection) {
           throw new Error('No connection to Azure DevOps');

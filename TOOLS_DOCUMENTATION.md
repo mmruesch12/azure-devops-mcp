@@ -4,10 +4,11 @@ This document provides comprehensive documentation for all tools available in th
 
 ## Table of Contents
 
-- [Repository Tools](#repository-tools)
-- [Project Tools](#project-tools)
-- [Work Item Tools](#work-item-tools)
-- [Pipeline Tools](#pipeline-tools)
+* [Repository Tools](#repository-tools)
+* [Project Tools](#project-tools)
+* [Work Item Tools](#work-item-tools)
+* [Pipeline Tools](#pipeline-tools)
+* [Wiki Tools](#wiki-tools)
 
 ## Repository Tools
 
@@ -26,14 +27,15 @@ Retrieve details about a specific repository.
 **Response:**
 
 Returns detailed information about the repository in markdown format, including:
-- Repository ID
-- Name
-- Default branch
-- Project information
-- URLs (remote and web)
-- Size
+* Repository ID
+* Name
+* Default branch
+* Project information
+* URLs (remote and web)
+* Size
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -60,14 +62,15 @@ List all repositories in a project or organization.
 **Response:**
 
 Returns a markdown table of repositories with the following information:
-- Name
-- ID
-- Default branch
-- Web URL
+* Name
+* ID
+* Default branch
+* Web URL
 
-The default repository (from `.env`) is highlighted in the output.
+The default repository (from `.env` ) is highlighted in the output.
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -94,15 +97,16 @@ Retrieve details about a specific pull request.
 **Response:**
 
 Returns detailed information about the pull request in markdown format, including:
-- Title and description
-- Status
-- Source and target branches
-- Creator information
-- Creation and update dates
-- Reviewers and their vote status
-- Related work items
+* Title and description
+* Status
+* Source and target branches
+* Creator information
+* Creation and update dates
+* Reviewers and their vote status
+* Related work items
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -114,7 +118,7 @@ Returns detailed information about the pull request in markdown format, includin
 ```
 
 **Default Behavior:**
-Searches for the pull request in the default repository specified in `AZURE_DEVOPS_DEFAULT_REPOSITORY`. If not found, will search across all repositories in the project.
+Searches for the pull request in the default repository specified in `AZURE_DEVOPS_DEFAULT_REPOSITORY` . If not found, will search across all repositories in the project.
 
 ---
 
@@ -134,12 +138,13 @@ Retrieve the diff (changes) for a specific pull request.
 **Response:**
 
 Returns a markdown formatted diff of the pull request, including:
-- Summary of changes (added, modified, deleted, renamed files)
-- List of all changed files with their change types
-- Links to view each file in the browser
-- Link to view the full diff in the browser
+* Summary of changes (added, modified, deleted, renamed files)
+* List of all changed files with their change types
+* Links to view each file in the browser
+* Link to view the full diff in the browser
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -174,14 +179,15 @@ List pull requests with optional filtering.
 **Response:**
 
 Returns a markdown table of pull requests with the following information:
-- ID
-- Title
-- Status
-- Creator
-- Creation date
-- Source and target branches
+* ID
+* Title
+* Status
+* Creator
+* Creation date
+* Source and target branches
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -217,14 +223,15 @@ Create a new pull request.
 **Response:**
 
 Returns detailed information about the created pull request in markdown format, including:
-- Title and description
-- Status
-- Source and target branches
-- Creator information
-- Creation date
-- Web URL for viewing the pull request
+* Title and description
+* Status
+* Source and target branches
+* Creator information
+* Creation date
+* Web URL for viewing the pull request
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -258,12 +265,13 @@ Search for code in a repository.
 **Response:**
 
 Returns search results in markdown format, including:
-- File path
-- Line number
-- Code snippet with highlighted match
-- Link to view the file in the web UI
+* File path
+* Line number
+* Code snippet with highlighted match
+* Link to view the file in the web UI
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -295,15 +303,16 @@ Retrieve details about a specific project.
 **Response:**
 
 Returns detailed information about the project in markdown format, including:
-- Project ID
-- Name
-- Description
-- State
-- Visibility
-- Last update time
-- URLs (API and web)
+* Project ID
+* Name
+* Description
+* State
+* Visibility
+* Last update time
+* URLs (API and web)
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -331,16 +340,17 @@ List all projects in the organization.
 **Response:**
 
 Returns a markdown table of projects with the following information:
-- Name
-- ID
-- Description
-- State
-- Visibility
-- Last update time
+* Name
+* ID
+* Description
+* State
+* Visibility
+* Last update time
 
-The default project (from `.env`) is highlighted in the output.
+The default project (from `.env` ) is highlighted in the output.
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -377,18 +387,19 @@ Create a new work item.
 **Response:**
 
 Returns detailed information about the created work item in markdown format, including:
-- ID and title
-- Type
-- State
-- Assigned to
-- Created by
-- Creation date
-- Description
-- Web URL for viewing the work item
-- Parent work item (if linked)
-- Related work items (if linked)
+* ID and title
+* Type
+* State
+* Assigned to
+* Created by
+* Creation date
+* Description
+* Web URL for viewing the work item
+* Parent work item (if linked)
+* Related work items (if linked)
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -423,18 +434,19 @@ Retrieve details about a specific work item.
 **Response:**
 
 Returns detailed information about the work item in markdown format, including:
-- ID and title
-- Type
-- State
-- Assigned to
-- Created by
-- Creation and update dates
-- Description
-- Priority
-- Parent work items (when `includeRelations` is true)
-- Child work items (when `includeRelations` is true)
+* ID and title
+* Type
+* State
+* Assigned to
+* Created by
+* Creation and update dates
+* Description
+* Priority
+* Parent work items (when `includeRelations` is true)
+* Child work items (when `includeRelations` is true)
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -460,14 +472,15 @@ Query work items using WIQL (Work Item Query Language).
 **Response:**
 
 Returns a markdown table of work items matching the query with the following information:
-- ID
-- Type
-- Title
-- State
-- Assigned to
-- Created date
+* ID
+* Type
+* Title
+* State
+* Assigned to
+* Created date
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -496,27 +509,34 @@ Retrieve details about a specific pipeline.
 | `pipelineId` | number | Yes | The ID of the pipeline |
 | `project` | string | No | The project containing the pipeline (uses default project if not specified) |
 | `includeYaml` | boolean | No | Whether to include the YAML content of the pipeline (default: false) |
+| `yamlOverrides` | object | No | Key-value pairs of YAML parameters to override in the pipeline definition |
 
 **Response:**
 
 Returns detailed information about the pipeline in markdown format, including:
-- Pipeline ID and name
-- Folder location
-- Configuration type
-- Revision
-- URL
-- Recent runs (if available)
-- Pipeline parameters (if `includeYaml` is true)
-- YAML content (if `includeYaml` is true and not too long)
+* Pipeline ID and name
+* Folder location
+* Configuration type
+* Revision
+* URL
+* Recent runs (if available)
+* Pipeline parameters (if `includeYaml` is true)
+* YAML content (if `includeYaml` is true and not too long)
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
   "tool": "get_pipeline",
   "args": {
     "pipelineId": 123,
-    "includeYaml": true
+    "includeYaml": true,
+    "yamlOverrides": {
+      "parameters": {
+        "environment": "staging"
+      }
+    }
   }
 }
 ```
@@ -539,20 +559,23 @@ Run a pipeline with optional parameters.
 | `branch` | string | No | The branch to run the pipeline on (defaults to the default branch) |
 | `parameters` | object | No | Key-value pairs of pipeline parameters defined in the YAML file |
 | `variables` | object | No | Key-value pairs of pipeline variables |
+| `yamlOverrides` | object | No | Key-value pairs to override in the pipeline YAML definition |
+| `waitForCompletion` | boolean | No | Whether to wait for the pipeline run to complete before returning (default: false) |
 
 **Response:**
 
 Returns information about the pipeline run in markdown format, including:
-- Pipeline name and ID
-- Run name and ID
-- State and result
-- Creation date
-- Branch
-- URL
-- Parameters used (if any)
-- Variables used (if any)
+* Pipeline name and ID
+* Run name and ID
+* State and result
+* Creation date
+* Branch
+* URL
+* Parameters used (if any)
+* Variables used (if any)
 
 **Example Request:**
+
 ```json
 {
   "request": "use_tool",
@@ -563,13 +586,106 @@ Returns information about the pipeline run in markdown format, including:
     "parameters": {
       "selectedApps": "app1 app2",
       "pullRequestId": "456"
-    }
+    },
+    "yamlOverrides": {
+      "trigger": null,
+      "pr": null,
+      "parameters": {
+        "environment": {
+          "default": "staging"
+        }
+      }
+    },
+    "waitForCompletion": true
   }
 }
 ```
 
 **Default Behavior:**
 Uses the project specified in `AZURE_DEVOPS_PROJECT` or `AZURE_DEVOPS_DEFAULT_PROJECT` from the environment configuration.
+
+## Wiki Tools
+
+Tools for interacting with Azure DevOps wikis.
+
+### create_wiki
+
+Create a new wiki in Azure DevOps.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | Yes | Name of the wiki |
+| `projectId` | string | No | Project ID (uses default from `.env` if not specified) |
+| `repositoryId` | string | No | Repository ID for the wiki |
+
+**Response:**
+
+Returns information about the created wiki in markdown format, including:
+* Wiki ID
+* Name
+* Project information
+* Repository details
+* URLs
+
+**Example Request:**
+
+```json
+{
+  "request": "use_tool",
+  "tool": "create_wiki",
+  "args": {
+    "name": "Project Documentation"
+  }
+}
+```
+
+**Default Behavior:**
+Uses the project specified in `AZURE_DEVOPS_PROJECT` from the environment configuration.
+
+---
+
+### edit_wiki_page
+
+Create or update a wiki page.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `wikiIdentifier` | string | Yes | Wiki ID or name |
+| `path` | string | Yes | Path to the wiki page |
+| `content` | string | Yes | Content of the wiki page in markdown format |
+| `projectId` | string | No | Project ID (uses default from `.env` if not specified) |
+| `version` | string | No | Version of the wiki page |
+
+**Response:**
+
+Returns information about the edited wiki page in markdown format, including:
+* Page path
+* Content
+* Version information
+* URLs
+
+**Example Request:**
+
+```json
+{
+  "request": "use_tool",
+  "tool": "edit_wiki_page",
+  "args": {
+    "wikiIdentifier": "Project Documentation",
+    "path": "/GettingStarted",
+    "content": "# Getting Started\n\nWelcome to the project documentation..."
+  }
+}
+```
+
+**Default Behavior:**
+Uses the project specified in `AZURE_DEVOPS_PROJECT` from the environment configuration.
+
+---
 
 ## Error Handling
 
@@ -587,10 +703,10 @@ All tools follow a consistent error handling pattern. When an error occurs, the 
 ```
 
 Common error scenarios include:
-- Authentication failures (invalid PAT)
-- Resource not found (incorrect IDs or names)
-- Permission issues (insufficient PAT scope)
-- Invalid parameters (missing required fields or incorrect formats)
+* Authentication failures (invalid PAT)
+* Resource not found (incorrect IDs or names)
+* Permission issues (insufficient PAT scope)
+* Invalid parameters (missing required fields or incorrect formats)
 
 ## Environment Variables
 
@@ -610,7 +726,7 @@ The following environment variables affect tool behavior:
 
 The Personal Access Token (PAT) used for authentication requires the following scopes:
 
-- For Repository tools: `Code (Read & Write)`
-- For Project tools: `Project and Team (Read)`
-- For Work Item tools: `Work Items (Read & Write)`
-- For Pull Request operations: `Pull Request Contributor`
+* For Repository tools: `Code (Read & Write)`
+* For Project tools: `Project and Team (Read)`
+* For Work Item tools: `Work Items (Read & Write)`
+* For Pull Request operations: `Pull Request Contributor`
